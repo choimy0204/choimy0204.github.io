@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>minyeong apps</title>
+<style>
+  :root { --bg:#FBF7F1; --paper:#fff; --ink:#2A211C; --soft:#6F5F55; --line:#E9DDD2; --accent:#C24E22; --peach:#FCE6D6; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; word-break:keep-all; }
+  main { max-width:720px; margin:0 auto; padding:64px 16px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:-0.02em; }
+  .lead { color:var(--soft); margin:0 0 32px; }
+  h2 { font-size:15px; color:var(--soft); font-weight:600; margin:0 0 12px; }
+  .apps { display:grid; gap:12px; }
+  .app { display:flex; gap:16px; align-items:center; background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:16px; text-decoration:none; color:inherit; }
+  .app:hover { border-color:var(--accent); }
+  .icon { flex:none; width:52px; height:52px; border-radius:14px; background:var(--peach); display:grid; place-items:center; font-size:28px; }
+  .name { font-weight:600; font-size:17px; }
+  .desc { color:var(--soft); font-size:14px; }
+  footer { margin-top:40px; color:var(--soft); font-size:14px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>minyeong</h1>
+  <p class="lead">일상의 작은 고민을 덜어 주는 앱을 만듭니다.</p>
+
+  <h2>앱</h2>
+  <div class="apps">
+    <!-- 새 앱을 추가할 때 이 블록을 복사하고 폴더 이름만 바꾸세요. -->
+    <a class="app" href="whattoeat/">
+      <div class="icon">🍽️</div>
+      <div>
+        <div class="name">지금 뭐먹지?</div>
+        <div class="desc">메뉴 룰렛과 주변 음식점 찾기</div>
+      </div>
+    </a>
+  </div>
+
+  <footer>문의: <a href="mailto:sbicom22@gmail.com">sbicom22@gmail.com</a></footer>
+</main>
+</body>
+</html>
