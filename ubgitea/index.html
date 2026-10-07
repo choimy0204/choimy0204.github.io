@@ -58,7 +58,7 @@
   </ol>
 </main>
 <script>
-const META = {"salt": "poylzGEBupxNrvMqFL0IFg==", "iv": "5T3j0wB/wFsAbzHv", "iterations": 310000, "file": "ubgitea.apk.enc", "fileName": "UBGitea-0.2.0.apk", "size": 33960491};
+const META = {"salt": "voAZ3PdV1gFsb14qlSvG4w==", "iv": "pCjr2xObpphI4MAl", "iterations": 310000, "check": "zd9d6/m3fAzT74v6+zP+ZD6pkHi6AmQ=", "checkIv": "ra4pWjUV+dgu9dOV", "file": "ubgitea.apk.enc", "fileName": "UBGitea-0.2.0.apk", "size": 33960491};
 const status = document.getElementById("status");
 const go = document.getElementById("go");
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -67,23 +67,24 @@ document.getElementById("form").addEventListener("submit", async event => {
   event.preventDefault();
   go.disabled = true;
   try {
-    say("파일을 받는 중…");
-    const response = await fetch(META.file, { cache: "no-store" });
-    if (!response.ok) throw new Error("fetch");
-    const sealed = await response.arrayBuffer();
-    say("여는 중…");
+    say("비밀번호 확인 중…");
     const password = new TextEncoder().encode(document.getElementById("password").value);
     const base = await crypto.subtle.importKey("raw", password, "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey(
       { name: "PBKDF2", salt: b64(META.salt), iterations: META.iterations, hash: "SHA-256" },
       base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-    let apk;
     try {
-      apk = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(META.iv) }, key, sealed);
+      await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(META.checkIv) }, key, b64(META.check));
     } catch (e) {
       say("비밀번호가 맞지 않습니다.", true);
       return;
     }
+    say("파일을 받는 중…");
+    const response = await fetch(META.file, { cache: "no-store" });
+    if (!response.ok) throw new Error("fetch");
+    const sealed = await response.arrayBuffer();
+    say("여는 중…");
+    const apk = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(META.iv) }, key, sealed);
     const url = URL.createObjectURL(new Blob([apk], { type: "application/vnd.android.package-archive" }));
     const link = document.createElement("a");
     link.href = url;
