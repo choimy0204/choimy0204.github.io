@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>UBGitea 다운로드</title>
+<style>
+  :root { --bg: #f4f7fc; --card: #ffffff; --ink: #14213d; --muted: #5b6b86; --line: #d8e1f0;
+          --blue: #1f5fd6; --blue-ink: #ffffff; --bad: #c62828; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1524; --card: #16213a; --ink: #e8eefb; --muted: #9fb0cf; --line: #2a3a5c;
+            --blue: #6d9cff; --blue-ink: #0d1524; --bad: #ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+         font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+         display: flex; align-items: center; justify-content: center; padding: 16px; }
+  main { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line);
+         border-radius: 20px; padding: 28px 24px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  .version { color: var(--blue); font-weight: 600; }
+  p { color: var(--muted); line-height: 1.5; margin: 8px 0; }
+  .notes { white-space: pre-line; color: var(--ink); background: var(--bg); border-radius: 12px;
+           padding: 12px 14px; margin: 16px 0; }
+  .notes:empty { display: none; }
+  label { display: block; font-weight: 600; margin: 20px 0 8px; }
+  input { width: 100%; font-size: 17px; padding: 14px; border-radius: 12px; border: 1px solid var(--line);
+          background: var(--card); color: var(--ink); }
+  button { width: 100%; margin-top: 12px; font-size: 17px; font-weight: 600; padding: 14px; border: 0;
+           border-radius: 12px; background: var(--blue); color: var(--blue-ink); cursor: pointer; }
+  button:disabled { opacity: .6; cursor: default; }
+  #status { min-height: 1.5em; margin-top: 12px; }
+  #status.bad { color: var(--bad); }
+  ol { color: var(--muted); padding-left: 20px; line-height: 1.6; margin: 20px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>UBGitea</h1>
+  <div class="version">버전 0.2.0 · 32.4 MB</div>
+  <div class="notes">코드 탭 저장(최대 5개)
+두 파일 비교(Merge처럼 좌우 선택)
+폴드에서 좌측 폭 드래그 조절
+변수 터치 시 같은 이름 강조
+저장소 탭 다시 누르면 목록으로
+앱 안에서 새 버전 확인</div>
+  <form id="form">
+    <label for="password">다운로드 비밀번호</label>
+    <input id="password" type="password" autocomplete="off" required>
+    <button id="go" type="submit">APK 다운로드</button>
+  </form>
+  <p id="status" role="status" aria-live="polite"></p>
+  <ol>
+    <li>받은 APK 파일을 엽니다.</li>
+    <li>"출처를 알 수 없는 앱" 설치를 이 브라우저에 허용합니다.</li>
+    <li>설치(업데이트)를 누릅니다. 로그인과 설정은 그대로 남습니다.</li>
+  </ol>
+</main>
+<script>
+const META = {"salt": "poylzGEBupxNrvMqFL0IFg==", "iv": "5T3j0wB/wFsAbzHv", "iterations": 310000, "file": "ubgitea.apk.enc", "fileName": "UBGitea-0.2.0.apk", "size": 33960491};
+const status = document.getElementById("status");
+const go = document.getElementById("go");
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+function say(text, bad) { status.textContent = text; status.className = bad ? "bad" : ""; }
+document.getElementById("form").addEventListener("submit", async event => {
+  event.preventDefault();
+  go.disabled = true;
+  try {
+    say("파일을 받는 중…");
+    const response = await fetch(META.file, { cache: "no-store" });
+    if (!response.ok) throw new Error("fetch");
+    const sealed = await response.arrayBuffer();
+    say("여는 중…");
+    const password = new TextEncoder().encode(document.getElementById("password").value);
+    const base = await crypto.subtle.importKey("raw", password, "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64(META.salt), iterations: META.iterations, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    let apk;
+    try {
+      apk = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(META.iv) }, key, sealed);
+    } catch (e) {
+      say("비밀번호가 맞지 않습니다.", true);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([apk], { type: "application/vnd.android.package-archive" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = META.fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    say("다운로드를 시작했습니다. 받은 파일을 열어 설치하세요.");
+  } catch (e) {
+    say("파일을 받지 못했습니다. 잠시 뒤 다시 시도하세요.", true);
+  } finally {
+    go.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
